@@ -10,8 +10,6 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
-	"fmt"
-	"runtime"
 )
 
 var (

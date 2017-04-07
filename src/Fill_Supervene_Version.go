@@ -22,7 +22,7 @@ var (
 	buffer = 1    //用于分片，避免内存先爆炸
 )
 
-func inputData(fd *os.File, ch chan int, quit chan int){
+func inputData(fd *os.File, ch chan int){
 	data          := ""
 	tmpDataLength := 0
 	for {
@@ -35,7 +35,6 @@ func inputData(fd *os.File, ch chan int, quit chan int){
 	}
 	fd.Write([]byte(data))
 	ch   <- tmpDataLength
-	quit <- 0
 }
 
 func main()  {
@@ -55,17 +54,16 @@ func main()  {
 
 	logs.Trace("START GENERATE")
 	ch   := make(chan int)
-	quit := make(chan int)
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	//for i := 0; i < 10; i++{
+	for i := 0; i < runtime.NumCPU() * 2; i++ {
+		go inputData(fd, ch)
+	}
 	for currentSize < (*size * 1024 * 1024){
-		go inputData(fd, ch, quit)
 		select {
 		case tmpDataLength := <- ch:
 			currentSize += tmpDataLength
 			fmt.Println(currentSize)
-		case <- quit:
-			continue
+			go inputData(fd, ch)
 		}
 	}
 	logs.Trace("done")
